@@ -3,12 +3,14 @@ import React from 'react';
 class SearchBar extends React.Component {
 
   state = {
-    inputValue: ''
+    inputValue: '',
+    suggestions: []
 }
 
 onChange = (e) => {
   this.setState({
-    inputValue: e.target.value
+    inputValue: e.target.value,
+
   })
 }
 
@@ -19,9 +21,9 @@ submit = (e) => {
 
   render() {
     return(
-    
     <form onSubmit={ this.submit }>
     <input className = "form-control form-control-lg" style = {inputStyle} onChange={this.onChange} placeholder={ this.props.placeholder }></input>
+    <p style= {{textColor:"red"}}> { this.props.error }</p>
     <button className="btn btn-light border border-primary fa fa-search" style = {buttonStyle}></button>      
     </form>
       )}
