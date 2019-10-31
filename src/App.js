@@ -1,16 +1,17 @@
 import React from 'react';
 import SearchBar from './components/SearchBar';
 import SearchPick from './components/SearchPick';
+import CityChoice from './components/CityChoice';
 import CircularProgress from '@material-ui/core/CircularProgress'
 import './App.css';
 
-const citySearchThreshold = 3000
+const displayCityAmmount = 3;
 
 const views = {
   pickSearchType: "searchPick",
   searchCity: "searchCity",
   searchCountry: "searchCountry",
-  pickCountry: "pickCountry",
+  pickCity: "pickCity",
   displayCity: "displayCity",
   loading: "loading"
 }
@@ -24,7 +25,9 @@ class App extends React.Component {
     city: {
       name: "",
       population: ""
-    }
+    },
+    cityOptions: [],
+    country: ""
   };
 
 
@@ -39,7 +42,22 @@ class App extends React.Component {
         name: "",
         population: ""
       },
-      searchError: ""
+      searchError: "",
+      cityOptions: [],
+      country: ""
+    })
+  }
+
+  error = (msg, nextView) => {
+    this.setState({
+      searchError: msg,
+      view: nextView,
+      cityOptions: [],
+      country: "",
+      city: {
+        name: "",
+        population: ""
+      }
     })
   }
 
@@ -47,8 +65,7 @@ class App extends React.Component {
     fetch("http://api.geonames.org/searchJSON?name_startsWith=" + city + "&maxRows=5&username=weknowit&orderby=relevance&isNameRequired=true")
       .then(res => res.json())
       .then(result => {
-        var resultCount = result.totalResultsCount
-        if (resultCount <= citySearchThreshold) {
+        if (result !== null) {
           result = result.geonames
           result = result.filter(x => (x.fclName).includes("city") && (x.fcodeName !== "populated place"))
           if (result.length > 0) {
@@ -60,41 +77,65 @@ class App extends React.Component {
               },
               searchError: ""
             })
-          }else {
-            this.setState({
-              searchError: "No results",
-              view: views.searchCity,
-              city: {
-                name: "",
-                population: ""
-              }
-            })
+          } else {
+            this.error("no results", views.searchCity)
           }
-        }else {
-          this.setState({
-            searchError: "Too many results",
-            view: views.searchCity,
-            city: {
-              name: "",
-              population: ""
-            }
-          })
+        } else {
+          this.error("no results", views.searchCity)
         }
       })
     this.setState({ view: views.loading, searchError: "" })
   }
 
   searchCountry = (country) => {
-    console.log(country)
+
+    fetch("https://restcountries.eu/rest/v2/name/" + country)
+      .then(country => country.json())
+      .then(country => {
+        if (country.status !== 404) {
+          fetch("http://api.geonames.org/searchJSON?country=" + country[0].alpha2Code + "&maxRows=30&username=weknowit&orderby=reference")
+            .then(res => res.json())
+            .then(result => {
+              if (result !== null && result.geonames) {
+                result = result.geonames
+                result = result.filter(x => (x.fclName).includes("city") && (x.fcodeName !== "populated place"))
+                result.sort((a,b)=> a.population>b.population ?  -1 : 1)
+                console.log(result)
+                if (result.length > 0) {
+                  this.setState({
+                    view: views.pickCity,
+                    cityOptions: result.slice(0,Math.min(result.length,displayCityAmmount)),
+                    searchError: "",
+                    country: country[0].name
+                  })
+                } else {
+                  this.error("no results", views.searchCountry)
+                }
+              } else {
+                this.error("no results", views.searchCountry)
+              }
+            })
+        } else {
+          this.error("no results for city", views.searchCountry)
+        }
+      })
+    this.setState({ view: views.loading, searchError: "" })
+  }
+
+  setCity = (pickedCity) => {
+    this.setState({
+      city: pickedCity,
+      view: views.displayCity
+    })
   }
 
   renderView = () => {
     switch (this.state.view) {
       case views.pickSearchType:
         return (
-          <div>
-            <SearchPick title="SEARCH BY CITY" nextView={views.searchCity} pickSearchType={this.pickSearchType}></SearchPick>
-            <SearchPick title="SEARCH BY COUNTRY" nextView={views.searchCountry} pickSearchType={this.pickSearchType}></SearchPick>
+          <div className="container">
+            <SearchPick className="col" title="SEARCH BY CITY" nextView={views.searchCity} pickSearchType={this.pickSearchType}></SearchPick>
+            <SearchPick className="col" title="SEARCH BY COUNTRY" nextView={views.searchCountry} pickSearchType={this.pickSearchType}></SearchPick>
           </div>
         )
 
@@ -102,7 +143,7 @@ class App extends React.Component {
         return (
           <div>
             <h3>SEARCH BY CITY</h3>
-            <SearchBar onSearch={this.searchCity} error= {this.state.searchError} placeholder="Enter a city"></SearchBar>
+            <SearchBar onSearch={this.searchCity} error={this.state.searchError} placeholder="Enter a city"></SearchBar>
           </div>
         )
 
@@ -110,7 +151,7 @@ class App extends React.Component {
         return (
           <div>
             <h2>SEARCH BY COUNTRY</h2>
-            <SearchBar onSearch={this.searchCountry} error= {this.state.searchError} placeholder="Enter a country"></SearchBar>
+            <SearchBar onSearch={this.searchCountry} error={this.state.searchError} placeholder="Enter a country"></SearchBar>
           </div>
         )
 
@@ -123,9 +164,17 @@ class App extends React.Component {
           </div>
         )
 
+      case views.pickCity:
+        return (
+          <div className="container">
+            <h2>{this.state.country}</h2>
+            {this.state.cityOptions.map(city => <CityChoice className="row" pickCity={this.setCity} city={city} title={city.name} > </CityChoice>)}
+          </div>
+        )
+
       case views.loading:
-        return(
-          <CircularProgress color="inherit" size={20}></CircularProgress>
+        return (
+          <CircularProgress color="inherit" size={50}></CircularProgress>
         )
       default:
         return
