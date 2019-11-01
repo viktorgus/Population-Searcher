@@ -5,7 +5,12 @@ class CityChoice extends React.Component {
 
     render() {
         return (
-            <button className="btn btn-light rounded-0" onClick={this.props.pickCity.bind(this, this.props.city)} style={btnStyle}>{this.props.title}</button>
+            <div className="row" style={{width: "50%", marginLeft: "auto", marginRight: "auto",
+            
+            width: '15em',
+            height: '5em'}} > 
+            <button className=" col-sm btn btn-light rounded-0" onClick={this.props.pickCity.bind(this, this.props.city)} style={btnStyle}>{this.props.title}</button>
+            </div>
         )
     }
 }
@@ -13,10 +18,7 @@ class CityChoice extends React.Component {
 const btnStyle = {
     borderColor: "black",
     cursor: 'pointer',
-    margin: '2rem 0.3rem',
     font: '1.2em Calibri',
-    width: '15em',
-    height: '5em'
 }
 
 export default CityChoice;

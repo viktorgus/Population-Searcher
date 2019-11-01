@@ -2,7 +2,10 @@ import React from 'react';
 import SearchBar from './components/SearchBar';
 import SearchPick from './components/SearchPick';
 import CityChoice from './components/CityChoice';
+import CityDisplayer from './components/CityDisplayer';
 import CircularProgress from '@material-ui/core/CircularProgress'
+
+
 import './App.css';
 
 const displayCityAmmount = 3;
@@ -15,6 +18,7 @@ const views = {
   displayCity: "displayCity",
   loading: "loading"
 }
+
 
 class App extends React.Component {
 
@@ -30,11 +34,12 @@ class App extends React.Component {
     country: ""
   };
 
-
+  //Helpfunction to change view when a searchtype is chosen
   pickSearchType = (nextView) => {
     this.setState({ view: nextView, searchError: "" })
   }
 
+  //Returns to initial page and resets App, used when clicking on CityPop header
   resetView = () => {
     this.setState({
       view: views.pickSearchType,
@@ -48,6 +53,7 @@ class App extends React.Component {
     })
   }
 
+  //Sets an errormsg after a faulty search and changes view to nextView
   error = (msg, nextView) => {
     this.setState({
       searchError: msg,
@@ -67,8 +73,12 @@ class App extends React.Component {
       .then(result => {
         if (result !== null) {
           result = result.geonames
+          //filters out all results that are not cities
           result = result.filter(x => (x.fclName).includes("city") && (x.fcodeName !== "populated place"))
+           //Sort over population size
+           result.sort((a,b)=> a.population>b.population ?  -1 : 1)
           if (result.length > 0) {
+            //sets nextview to display city 
             this.setState({
               view: views.displayCity,
               city: {
@@ -89,6 +99,7 @@ class App extends React.Component {
 
   searchCountry = (country) => {
 
+    //First finds twoletter code from country search necessary for the second API call
     fetch("https://restcountries.eu/rest/v2/name/" + country)
       .then(country => country.json())
       .then(country => {
@@ -98,10 +109,12 @@ class App extends React.Component {
             .then(result => {
               if (result !== null && result.geonames) {
                 result = result.geonames
+                //Filters out results that are not cities
                 result = result.filter(x => (x.fclName).includes("city") && (x.fcodeName !== "populated place"))
+                //Sort over population size
                 result.sort((a,b)=> a.population>b.population ?  -1 : 1)
-                console.log(result)
                 if (result.length > 0) {
+                  //Sets view to display city and sets city to biggest cities of resulting array
                   this.setState({
                     view: views.pickCity,
                     cityOptions: result.slice(0,Math.min(result.length,displayCityAmmount)),
@@ -122,6 +135,7 @@ class App extends React.Component {
     this.setState({ view: views.loading, searchError: "" })
   }
 
+  //sets the city to be displayed and changes view
   setCity = (pickedCity) => {
     this.setState({
       city: pickedCity,
@@ -129,7 +143,9 @@ class App extends React.Component {
     })
   }
 
+  //Main Render Function. Changes components based on state.view
   renderView = () => {
+
     switch (this.state.view) {
       case views.pickSearchType:
         return (
@@ -150,25 +166,23 @@ class App extends React.Component {
       case views.searchCountry:
         return (
           <div>
-            <h2>SEARCH BY COUNTRY</h2>
+            <h3>SEARCH BY COUNTRY</h3>
             <SearchBar onSearch={this.searchCountry} error={this.state.searchError} placeholder="Enter a country"></SearchBar>
           </div>
         )
 
       case views.displayCity:
         return (
-          <div>
-            <h2>{this.state.city.name}</h2>
-            <h4>Population: </h4>
-            <p>{this.state.city.population}</p>
-          </div>
+            <CityDisplayer city={ this.state.city }></CityDisplayer>
         )
 
       case views.pickCity:
         return (
           <div className="container">
-            <h2>{this.state.country}</h2>
-            {this.state.cityOptions.map(city => <CityChoice className="row" pickCity={this.setCity} city={city} title={city.name} > </CityChoice>)}
+            <h3>{this.state.country}</h3>
+            <div style={{marginTop:"2.5em"}}>
+            {this.state.cityOptions.map(city => <CityChoice pickCity={this.setCity} city={city} title={city.name}></CityChoice>)}
+            </div>
           </div>
         )
 
@@ -197,7 +211,7 @@ const headingStyle = {
   textColor: 'black',
   cursor: 'pointer',
   size: 'auto',
-  margin: '0.5em'
+  margin: '0.7em'
 }
 
 
