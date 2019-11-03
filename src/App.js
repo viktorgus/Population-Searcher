@@ -8,8 +8,10 @@ import CircularProgress from '@material-ui/core/CircularProgress'
 
 import './App.css';
 
+//Sets ammount of city to choose from when country is picked
 const displayCityAmmount = 3;
 
+//Enums for representing state of App
 const views = {
   pickSearchType: "searchPick",
   searchCity: "searchCity",
@@ -21,8 +23,6 @@ const views = {
 
 
 class App extends React.Component {
-
-
 
   state = {
     view: views.pickSearchType,
@@ -67,6 +67,7 @@ class App extends React.Component {
     })
   }
 
+  //Search for city via geonames API. 
   searchCity = (city) => {
     fetch("http://api.geonames.org/searchJSON?name_startsWith=" + city + "&maxRows=5&username=weknowit&orderby=relevance&isNameRequired=true")
       .then(res => res.json())
@@ -97,6 +98,7 @@ class App extends React.Component {
     this.setState({ view: views.loading, searchError: "" })
   }
 
+  //First gets 2 letter code from rescountries API then searches this code on geonames API for biggest cities within the country
   searchCountry = (country) => {
 
     //First finds twoletter code from country search necessary for the second API call
