@@ -16,7 +16,7 @@ class SearchBar extends React.Component {
 
   submit = (e) => {
     e.preventDefault()
-    if (this.state.inputValue !== "") {
+    if ((this.state.inputValue.length>0  && this.state.inputValue.trim())) {
       this.props.onSearch(this.state.inputValue)
     }
   }
