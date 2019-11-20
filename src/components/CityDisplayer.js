@@ -13,7 +13,7 @@ class CityDisplayer extends React.Component {
             <div>
             <h3>{this.props.city.name}</h3>
             <div style = {cityBlockStyle}>
-            <h5>Population: </h5>
+            <h4>Population: </h4>
             <p style={populationStyle}>{formatNumber(this.props.city.population)}</p>
             </div>
             </div>
@@ -25,13 +25,13 @@ const cityBlockStyle = {
     borderStyle: "solid",
     borderColor: "black",
     marginTop: "2em",
-    width: "40%",
+    width: "200px",
     marginLeft: "auto",
     marginRight: "auto"
 }
 
 const populationStyle = {
-    fontSize:"3em",
+    fontSize:"2em",
     fontFamily: "arial"
 }
 

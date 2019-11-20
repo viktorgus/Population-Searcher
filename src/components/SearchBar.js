@@ -34,7 +34,7 @@ class SearchBar extends React.Component {
 
 const inputStyle = {
   textAlign: 'center',
-  width: '30%',
+  width: '200px',
   margin: '2em auto 1em auto'
 }
 
