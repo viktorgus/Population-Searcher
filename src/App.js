@@ -67,34 +67,69 @@ class App extends React.Component {
     })
   }
 
-  //Search for city via geonames API. 
-  searchCity = (city) => {
-    fetch("http://api.geonames.org/searchJSON?name_startsWith=" + city + "&maxRows=5&username=weknowit&orderby=relevance&isNameRequired=true")
-      .then(res => res.json())
+  //sets state to display city after a valid search has been made and found for a city
+  setDisplayCityState = (newcity) => {
+    this.setState({
+      view: views.displayCity,
+      city: {
+        name: newcity[0].name,
+        population: newcity[0].population
+      },
+      searchError: ""
+    })
+  }
+
+  
+  //sets state to display a choice city after a search has been made and found for a country
+  setChooseCityState = (cities, country) => {
+    this.setState({
+      view: views.pickCity,
+      cityOptions: cities.slice(0, Math.min(cities.length, displayCityAmmount)),
+      searchError: "",
+      country: country[0].name
+    })
+  }
+
+  //Used to fetch, filter and sort cities from api geonames if error, returns to prevState. 
+  //if successfull uses nextState (method that sets next state depending on result)
+  //Country is passed if nextState needs to know country.
+  searchCitiesAndSetState = (queryurl, nextState, prevState, country = null) => {
+    fetch("http://api.geonames.org/searchJSON?" + queryurl)
       .then(result => {
+        //Checks if ok http response
+        if(result.ok){
+          //converts API response to json format
+        result.json().then(result=> {
+          
         if (result !== null) {
           result = result.geonames
           //filters out all results that are not cities
           result = result.filter(x => (x.fclName).includes("city") && (x.fcodeName !== "populated place"))
-           //Sort over population size
-           result.sort((a,b)=> a.population>b.population ?  -1 : 1)
+          //Sort over population size
+          result.sort((a, b) => a.population > b.population ? -1 : 1)
           if (result.length > 0) {
-            //sets nextview to display city 
-            this.setState({
-              view: views.displayCity,
-              city: {
-                name: result[0].name,
-                population: result[0].population
-              },
-              searchError: ""
-            })
+            //sets next view as the specified nextState. Needs result and country for displaying city and/or countryn
+            nextState(result,country)
           } else {
-            this.error("no results", views.searchCity)
+            //if results are found but no results are cities
+            this.error("no results", prevState)
           }
+          
         } else {
-          this.error("no results", views.searchCity)
-        }
+          //if no results are found by geonames
+          this.error("no results", prevState)
+        }           
+      })} else {
+        //if api fetch call generates a http error
+        this.error("faulty query", prevState)
+      }
       })
+  }
+
+  //Search for city via geonames API. 
+  searchCity = (city) => {
+    var queryurl = "name_startsWith=" + city + "&maxRows=5&username=weknowit&orderby=relevance&isNameRequired=true"
+    this.searchCitiesAndSetState(queryurl, this.setDisplayCityState, views.searchCity)
     this.setState({ view: views.loading, searchError: "" })
   }
 
@@ -106,31 +141,10 @@ class App extends React.Component {
       .then(country => country.json())
       .then(country => {
         if (country.status !== 404) {
-          fetch("http://api.geonames.org/searchJSON?country=" + country[0].alpha2Code + "&maxRows=30&username=weknowit&orderby=reference")
-            .then(res => res.json())
-            .then(result => {
-              if (result !== null && result.geonames) {
-                result = result.geonames
-                //Filters out results that are not cities
-                result = result.filter(x => (x.fclName).includes("city") && (x.fcodeName !== "populated place"))
-                //Sort over population size
-                result.sort((a,b)=> a.population>b.population ?  -1 : 1)
-                if (result.length > 0) {
-                  //Sets view to display city and sets city to biggest cities of resulting array
-                  this.setState({
-                    view: views.pickCity,
-                    cityOptions: result.slice(0,Math.min(result.length,displayCityAmmount)),
-                    searchError: "",
-                    country: country[0].name
-                  })
-                } else {
-                  this.error("no results", views.searchCountry)
-                }
-              } else {
-                this.error("no results", views.searchCountry)
-              }
-            })
+          var queryurl = "country=" + country[0].alpha2Code + "&maxRows=30&username=weknowit&orderby=reference"
+          this.searchCitiesAndSetState(queryurl, this.setChooseCityState, views.searchCountry, country)
         } else {
+          //displays error if no country is found
           this.error("no results for city", views.searchCountry)
         }
       })
@@ -175,15 +189,15 @@ class App extends React.Component {
 
       case views.displayCity:
         return (
-            <CityDisplayer city={ this.state.city }></CityDisplayer>
+          <CityDisplayer city={this.state.city}></CityDisplayer>
         )
 
       case views.pickCity:
         return (
           <div className="container">
             <h3>{this.state.country}</h3>
-            <div style={{marginTop:"2.5em"}}>
-            {this.state.cityOptions.map(city => <CityChoice pickCity={this.setCity} city={city} title={city.name}></CityChoice>)}
+            <div style={{ marginTop: "2.5em" }}>
+              {this.state.cityOptions.map(city => <CityChoice pickCity={this.setCity} city={city} title={city.name}></CityChoice>)}
             </div>
           </div>
         )
