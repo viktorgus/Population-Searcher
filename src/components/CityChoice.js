@@ -5,7 +5,7 @@ class CityChoice extends React.Component {
 
     render() {
         return (
-            <div className="row" style={{width: "50%", marginLeft: "auto", marginRight: "auto",
+            <div className="row" style={{marginLeft: "auto", marginRight: "auto",
             
             width: '15em',
             height: '5em'}} > 

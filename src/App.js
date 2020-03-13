@@ -3,6 +3,7 @@ import SearchBar from './components/SearchBar';
 import SearchPick from './components/SearchPick';
 import CityChoice from './components/CityChoice';
 import CityDisplayer from './components/CityDisplayer';
+import MapContainer from './components/MapContainer';
 import CircularProgress from '@material-ui/core/CircularProgress'
 
 
@@ -31,7 +32,8 @@ class App extends React.Component {
       population: ""
     },
     cityOptions: [],
-    country: ""
+    country: "",
+    position: []
   };
 
   //Helpfunction to change view when a searchtype is chosen
@@ -49,7 +51,8 @@ class App extends React.Component {
       },
       searchError: "",
       cityOptions: [],
-      country: ""
+      country: "",
+      position: []
     })
   }
 
@@ -69,13 +72,16 @@ class App extends React.Component {
 
   //sets state to display city after a valid search has been made and found for a city
   setDisplayCityState = (newcity) => {
+    console.log(newcity[0])
     this.setState({
       view: views.displayCity,
       city: {
         name: newcity[0].name,
         population: newcity[0].population
       },
-      searchError: ""
+      searchError: "",
+      position: [newcity[0].lat,newcity[0].lng]
+
     })
   }
 
@@ -155,7 +161,10 @@ class App extends React.Component {
   setCity = (pickedCity) => {
     this.setState({
       city: pickedCity,
-      view: views.displayCity
+      view: views.displayCity,
+      searchError: "",
+      position: [pickedCity.lat,pickedCity.lng]
+
     })
   }
 
@@ -189,7 +198,12 @@ class App extends React.Component {
 
       case views.displayCity:
         return (
+          <div>
           <CityDisplayer city={this.state.city}></CityDisplayer>
+
+          <MapContainer position={this.state.position}> </MapContainer>
+
+          </div>
         )
 
       case views.pickCity:
@@ -214,8 +228,8 @@ class App extends React.Component {
 
   render() {
     return (
-      <div className="App" style={{ marginTop: '5rem' }}>
-        <h1 style={headingStyle} onClick={this.resetView}>  CityPop </h1>
+      <div className="App" style={{ marginTop: '3rem' }}>
+        <h1 style={headingStyle} onClick={this.resetView}>  Population Searcher </h1>
         {this.renderView()}
       </div>
     )

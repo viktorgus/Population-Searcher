@@ -13,7 +13,7 @@ class CityDisplayer extends React.Component {
             <div>
             <h3>{this.props.city.name}</h3>
             <div style = {cityBlockStyle}>
-            <h4>Population: </h4>
+            <h6>Population: </h6>
             <p style={populationStyle}>{formatNumber(this.props.city.population)}</p>
             </div>
             </div>
